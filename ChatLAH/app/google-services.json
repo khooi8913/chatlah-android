@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "774220483768",
+    "firebase_url": "https://chatlah-464f2.firebaseio.com",
+    "project_id": "chatlah-464f2",
+    "storage_bucket": "chatlah-464f2.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:774220483768:android:df16e68c21e1c2a2",
+        "android_client_info": {
+          "package_name": "chatlah.mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "774220483768-7a0orfq7cpvq05b3vjgj93te4imrmgrb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "chatlah.mobile",
+            "certificate_hash": "fdbb6ddbe0695b6d046ace8392ff9d0b545d6f77"
+          }
+        },
+        {
+          "client_id": "774220483768-cjhttds1b27q9vf2ia7ath9mjsemvpls.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCAErmKcnEdjGiuzdVz4U11qxsr12MGDmQ"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "774220483768-cjhttds1b27q9vf2ia7ath9mjsemvpls.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
