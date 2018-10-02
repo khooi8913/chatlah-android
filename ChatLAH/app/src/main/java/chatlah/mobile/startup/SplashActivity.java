@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import chatlah.mobile.R;
+import chatlah.mobile.TabActivity;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -39,6 +40,11 @@ public class SplashActivity extends AppCompatActivity {
                         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
                         if (firebaseUser != null) {  // User is logged in, proceed to verify identity
                             // TODO: Verify user
+                            Log.d(TAG, firebaseUser.getUid());
+
+                            Intent intent = new Intent(SplashActivity.this, TabActivity.class);
+                            startActivity(intent);
+                            finish();
                         } else {    // User is not logged in, proceed to login page
                             Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
                             startActivity(intent);
