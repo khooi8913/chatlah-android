@@ -1,4 +1,6 @@
 package chatlah.mobile.info;
 
-public class InfoFragment {
+import android.support.v4.app.Fragment;
+
+public class InfoFragment extends Fragment {
 }
