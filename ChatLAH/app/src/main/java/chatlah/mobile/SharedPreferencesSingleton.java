@@ -16,8 +16,8 @@ public class SharedPreferencesSingleton {
     private static final String IS_LOGGED_IN = "IS_LOGGED_IN";
 
     private SharedPreferencesSingleton(Context context) {
-        PACKAGE_NAME = context.getPackageName();
         mContext = context.getApplicationContext();
+        PACKAGE_NAME = mContext.getPackageName();
 
         sharedPreferences = context.getSharedPreferences(PACKAGE_NAME, MODE_PRIVATE);
         editor = sharedPreferences.edit();
