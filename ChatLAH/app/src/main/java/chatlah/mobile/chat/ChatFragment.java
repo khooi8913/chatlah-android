@@ -1,6 +1,8 @@
 package chatlah.mobile.chat;
 
 import android.content.Context;
+import android.content.Intent;
+import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -15,8 +17,19 @@ import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import com.android.volley.Request;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -26,6 +39,9 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import chatlah.mobile.R;
 import chatlah.mobile.SharedPreferencesSingleton;
@@ -46,6 +62,10 @@ public class ChatFragment extends Fragment {
     private FirestoreRecyclerOptions<ChatMessage> options;
     private FirestoreRecyclerAdapter chatRecordsAdapter;
 
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationRequest mLocationRequest;
+    private LocationCallback mLocationCallback;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,7 +80,13 @@ public class ChatFragment extends Fragment {
         firestore.setFirestoreSettings(settings);
 
         SharedPreferencesSingleton.getInstance(mContext);
-        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START, System.currentTimeMillis()/1000L + "");
+        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START, System.currentTimeMillis() / 1000L + "");
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
+        setUpLocationCallback();
+//        requestLastKnownLocation();
+        createLocationRequest();
+        startLocationUpdates();
     }
 
     @Nullable
@@ -71,6 +97,7 @@ public class ChatFragment extends Fragment {
 
             // Scroll chat to last message when keyboard is activated
             boolean isOpened = false;
+
             @Override
             public void onGlobalLayout() {
                 int heightDiff = view.getRootView().getHeight() - view.getHeight();
@@ -98,7 +125,6 @@ public class ChatFragment extends Fragment {
         sendMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
                 if (userMessage.getText().toString().equals("") || userMessage.toString().isEmpty()) {
                     return;
                 }
@@ -109,7 +135,6 @@ public class ChatFragment extends Fragment {
                         new Timestamp(System.currentTimeMillis() / 1000L, 0)
                 );
 
-                // TODO: Send message
                 firestore.collection("chatRooms")
                         .document("MV")
                         .collection("messages")
@@ -156,7 +181,7 @@ public class ChatFragment extends Fragment {
             @Override
             public int getItemViewType(int position) {
                 ChatMessage chatMessage = this.getItem(position);
-                if(chatMessage.getSender().equals(firebaseUser.getUid()))
+                if (chatMessage.getSender().equals(firebaseUser.getUid()))
                     return VIEW_TYPE_MESSAGE_SENT;
                 else return VIEW_TYPE_MESSAGE_RECEIVED;
             }
@@ -173,7 +198,7 @@ public class ChatFragment extends Fragment {
                             false
                     );
                     return new ReceivedChatMessageHolder(view);
-                }else {
+                } else {
                     view = LayoutInflater.from(parent.getContext()).inflate(
                             R.layout.message_sent,
                             parent,
@@ -187,10 +212,10 @@ public class ChatFragment extends Fragment {
             protected void onBindViewHolder(@NonNull ChatMessageHolder holder, int position, @NonNull ChatMessage chatMessage) {
                 switch (holder.getItemViewType()) {
                     case VIEW_TYPE_MESSAGE_RECEIVED:
-                        ((ReceivedChatMessageHolder)holder).bind(chatMessage);
+                        ((ReceivedChatMessageHolder) holder).bind(chatMessage);
                         break;
                     case VIEW_TYPE_MESSAGE_SENT:
-                        ((SentChatMessageHolder)holder).bind(chatMessage);
+                        ((SentChatMessageHolder) holder).bind(chatMessage);
                         break;
                     default:
                         break;
@@ -204,13 +229,108 @@ public class ChatFragment extends Fragment {
         chatRecordsLayout.setStackFromEnd(true);
         chatRecords.setLayoutManager(chatRecordsLayout);
         chatRecords.setAdapter(chatRecordsAdapter);
-        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount()-1);
+        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
+    }
+
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(300000);
+        mLocationRequest.setFastestInterval(150000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+
+//    private void requestLastKnownLocation() throws SecurityException {
+//        mFusedLocationClient.getLastLocation()
+//                .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
+//                    @Override
+//                    public void onSuccess(Location location) {
+//                        if (location != null) {
+//                            double latitude = location.getLatitude();
+//                            double longitude = location.getLongitude();
+//
+//                            // Call Api Here
+//                            requestGeofenceInfo(latitude, longitude);
+//                        } else {
+//                            // Do something here
+//                            return;
+//                        }
+//                    }
+//                });
+//    }
+
+    private void startLocationUpdates() throws  SecurityException{
+        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                mLocationCallback,
+                null /* Looper */);
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+    }
+
+    private void setUpLocationCallback() {
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                if(locationResult == null) {
+                    return;
+                }
+
+                Location lastKnwonLocation = locationResult.getLastLocation();
+                double latitude = lastKnwonLocation.getLatitude();
+                double longitude = lastKnwonLocation.getLongitude();
+
+                Log.d(TAG, latitude + "," + longitude);
+                requestGeofenceInfo(latitude, longitude);
+            }
+
+        };
+    }
+
+    private void requestGeofenceInfo(double latitude, double longitude) {
+        String geoFenceApiUrl = getString(R.string.geofence_api_url) + latitude + "," + longitude;
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, geoFenceApiUrl, null, new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    Log.d(TAG, response.toString());
+
+                    if (response.getBoolean("in_fence")) {
+                        String fence_id = response.getString("fence_id");
+                        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, fence_id);
+                    } else {
+                        // Not in fence
+                        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, "");
+                    }
+
+                    // Broadcast to notify change
+                    Intent intent = new Intent();
+                    intent.setAction("chatlah.mobile.LOCATION_CHANGED");
+                    getActivity().sendBroadcast(intent);
+                } catch (JSONException e) {
+                    Log.d(TAG, e.toString());
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                // What should we do here a?
+                Log.e(TAG, error.toString());
+            }
+        });
+        Volley.newRequestQueue(mContext).add(jsonObjectRequest);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        stopLocationUpdates();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount()-1);
+        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
     }
 
     @Override

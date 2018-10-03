@@ -14,6 +14,7 @@ public class SharedPreferencesSingleton {
 
     private static String PACKAGE_NAME;
     public static final String CHAT_SESSION_START = "CHAT_SESSION_START";
+    public static final String CONVERSATION_ZONE = "CONVERSATION_ZONE";
 
     private SharedPreferencesSingleton(Context context) {
         mContext = context.getApplicationContext();
