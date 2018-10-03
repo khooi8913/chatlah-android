@@ -86,7 +86,6 @@ public class ChatFragment extends Fragment {
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
         setUpLocationCallback();
-//        requestLastKnownLocation();
         createLocationRequest();
         startLocationUpdates();
     }
@@ -105,7 +104,7 @@ public class ChatFragment extends Fragment {
                 int heightDiff = view.getRootView().getHeight() - view.getHeight();
                 if (heightDiff > 100) { // 99% of the time the height diff will be due to a keyboard.
                     if (!isOpened) {
-                        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+                        if(chatRecordsAdapter!=null) chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
                     }
                     isOpened = true;
                 } else if (isOpened) {
@@ -139,7 +138,7 @@ public class ChatFragment extends Fragment {
                 );
 
                 firestore.collection("chatRooms")
-                        .document("MV")
+                        .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
                         .collection("messages")
                         .add(chatMessage);
 
@@ -154,12 +153,11 @@ public class ChatFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        getChatMessages();
     }
 
     private void getChatMessages() {
         Query query = firestore.collection("chatRooms")
-                .document("MV")
+                .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
                 .startAt(new Timestamp(Long.parseLong(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START)), 0));
@@ -167,7 +165,7 @@ public class ChatFragment extends Fragment {
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
-                chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+                if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
             }
         });
 
@@ -232,7 +230,7 @@ public class ChatFragment extends Fragment {
         chatRecordsLayout.setStackFromEnd(true);
         chatRecords.setLayoutManager(chatRecordsLayout);
         chatRecords.setAdapter(chatRecordsAdapter);
-        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
+        if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
     }
 
     protected void createLocationRequest() {
@@ -283,16 +281,36 @@ public class ChatFragment extends Fragment {
 
                     if (response.getBoolean("in_fence")) {
                         String fence_id = response.getString("fence_id");
-                        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, fence_id);
+                        // Compare with the current one
+                        String current_fence_id = SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE);
+                        if(current_fence_id==null)  current_fence_id = "";
+                        
+                        if(current_fence_id.equals(fence_id)) {
+                            // Do nothing since location not changed
+                        } else {
+                            // Have to clear the chat messages
+                            sendMessage.setClickable(false);
+                            SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, fence_id);
+
+                            // Get Messages Here
+                            getChatMessages();
+                            sendMessage.setClickable(true);
+
+                            // Broadcast to notify change
+                            Intent intent = new Intent();
+                            intent.setAction("chatlah.mobile.LOCATION_CHANGED");
+                            getActivity().sendBroadcast(intent);
+                        }
                     } else {
                         // Not in fence
-                        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, "");
-                    }
+                        sendMessage.setClickable(false);
+                        SharedPreferencesSingleton.clearSharedPrefs();
 
-                    // Broadcast to notify change
-                    Intent intent = new Intent();
-                    intent.setAction("chatlah.mobile.LOCATION_CHANGED");
-                    getActivity().sendBroadcast(intent);
+                        // Broadcast to notify change
+                        Intent intent = new Intent();
+                        intent.setAction("chatlah.mobile.LOCATION_CHANGED");
+                        getActivity().sendBroadcast(intent);
+                    }
                 } catch (JSONException e) {
                     Log.d(TAG, e.toString());
                 }
@@ -316,7 +334,7 @@ public class ChatFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
+        if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
     }
 
     @Override
