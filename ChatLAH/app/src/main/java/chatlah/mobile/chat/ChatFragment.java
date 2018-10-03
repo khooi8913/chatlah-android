@@ -16,6 +16,8 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
@@ -29,7 +31,6 @@ import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -54,6 +55,7 @@ public class ChatFragment extends Fragment {
 
     private EditText userMessage;
     private ImageView sendMessage;
+    private TextView emptyView;
 
     private FirebaseUser firebaseUser;
     private FirebaseFirestore firestore;
@@ -118,7 +120,8 @@ public class ChatFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        chatRecords = getActivity().findViewById(R.id.recycler_view_chat_messages);
+        chatRecords = getActivity().findViewById(R.id.recycler_chat_messages);
+        emptyView = getActivity().findViewById(R.id.recycler_empty_view);
         userMessage = getActivity().findViewById(R.id.edit_text_user_message);
         sendMessage = getActivity().findViewById(R.id.button_send_message);
         sendMessage.setClickable(true);
@@ -239,29 +242,12 @@ public class ChatFragment extends Fragment {
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-//    private void requestLastKnownLocation() throws SecurityException {
-//        mFusedLocationClient.getLastLocation()
-//                .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
-//                    @Override
-//                    public void onSuccess(Location location) {
-//                        if (location != null) {
-//                            double latitude = location.getLatitude();
-//                            double longitude = location.getLongitude();
-//
-//                            // Call Api Here
-//                            requestGeofenceInfo(latitude, longitude);
-//                        } else {
-//                            // Do something here
-//                            return;
-//                        }
-//                    }
-//                });
-//    }
-
     private void startLocationUpdates() throws  SecurityException{
         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
                 mLocationCallback,
                 null /* Looper */);
+
+        Toast.makeText(mContext, "Requesting location information..." ,Toast.LENGTH_SHORT).show();
     }
 
     private void stopLocationUpdates() {

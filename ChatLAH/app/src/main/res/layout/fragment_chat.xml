@@ -11,10 +11,21 @@
         android:layout_height="0dp">
 
         <android.support.v7.widget.RecyclerView
-            android:id="@+id/recycler_view_chat_messages"
+            android:id="@+id/recycler_chat_messages"
+            android:scrollbars="vertical"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         </android.support.v7.widget.RecyclerView>
+
+        <!--Add empty view-->
+        <TextView
+            android:id="@+id/recycler_empty_view"
+            android:text="ChatLAH!?"
+            android:textSize="30sp"
+            android:gravity="center"
+            android:visibility="gone"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
 
     </android.support.design.widget.CoordinatorLayout>
 
