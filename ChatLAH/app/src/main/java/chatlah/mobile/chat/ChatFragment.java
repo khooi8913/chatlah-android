@@ -82,12 +82,10 @@ public class ChatFragment extends Fragment {
         firestore.setFirestoreSettings(settings);
 
         SharedPreferencesSingleton.getInstance(mContext);
-        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START, System.currentTimeMillis() / 1000L + "");
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
         setUpLocationCallback();
         createLocationRequest();
-        startLocationUpdates();
     }
 
     @Nullable
@@ -119,8 +117,9 @@ public class ChatFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        chatRecords = getActivity().findViewById(R.id.recycler_chat_messages);
         emptyView = getActivity().findViewById(R.id.recycler_empty_view);
+        chatRecords = getActivity().findViewById(R.id.recycler_chat_messages);
+
         userMessage = getActivity().findViewById(R.id.edit_text_user_message);
         sendMessage = getActivity().findViewById(R.id.button_send_message);
         sendMessage.setClickable(true);
@@ -222,6 +221,15 @@ public class ChatFragment extends Fragment {
                         break;
                 }
             }
+
+            @Override
+            public void onDataChanged() {
+                super.onDataChanged();
+                if(this.getItemCount()>0){
+                    emptyView.setVisibility(View.GONE);
+                    chatRecords.setVisibility(View.VISIBLE);
+                }
+            }
         };
 
         LinearLayoutManager chatRecordsLayout = new LinearLayoutManager(getActivity());
@@ -231,12 +239,18 @@ public class ChatFragment extends Fragment {
         chatRecords.setLayoutManager(chatRecordsLayout);
         chatRecords.setAdapter(chatRecordsAdapter);
         if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
+
+        if(chatRecordsAdapter.getItemCount() == 0){
+            emptyView.setVisibility(View.VISIBLE);
+            emptyView.setText("ChatLAH!");
+            chatRecords.setVisibility(View.GONE);
+        }
     }
 
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(300000);
-        mLocationRequest.setFastestInterval(150000);
+        mLocationRequest.setInterval(180000);
+        mLocationRequest.setFastestInterval(60000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
@@ -257,6 +271,7 @@ public class ChatFragment extends Fragment {
             @Override
             public void onLocationResult(LocationResult locationResult) {
                 if(locationResult == null) {
+                    Toast.makeText(mContext, "Location information not available...", Toast.LENGTH_SHORT).show();
                     return;
                 }
 
@@ -284,13 +299,16 @@ public class ChatFragment extends Fragment {
                         // Compare with the current one
                         String current_fence_id = SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE);
                         if(current_fence_id==null)  current_fence_id = "";
-                        
+
                         if(current_fence_id.equals(fence_id)) {
                             // Do nothing since location not changed
                         } else {
                             // Have to clear the chat messages
+                            chatRecords.setAdapter(null);
+
                             sendMessage.setClickable(false);
                             SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, fence_id);
+                            SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START, System.currentTimeMillis() / 1000L + "");
 
                             // Get Messages Here
                             getChatMessages();
@@ -304,7 +322,13 @@ public class ChatFragment extends Fragment {
                     } else {
                         // Not in fence
                         sendMessage.setClickable(false);
+                        chatRecords.setAdapter(null);
                         SharedPreferencesSingleton.clearSharedPrefs();
+
+                        // Tell user that ChatLAH is not available.
+                        emptyView.setText("Ooopsss... ChatLAH! is not available in your region.");
+                        emptyView.setVisibility(View.VISIBLE);
+                        chatRecords.setVisibility(View.GONE);
 
                         // Broadcast to notify change
                         Intent intent = new Intent();
@@ -334,6 +358,7 @@ public class ChatFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
+        startLocationUpdates();
         if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
     }
 
