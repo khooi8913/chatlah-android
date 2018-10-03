@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 
@@ -19,23 +20,14 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.CollectionReference;
-import com.google.firebase.firestore.DocumentChange;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import chatlah.mobile.R;
-import chatlah.mobile.ReceivedChatMessageHolder;
 import chatlah.mobile.chat.model.ChatMessage;
 
 public class ChatFragment extends Fragment {
@@ -70,7 +62,23 @@ public class ChatFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_chat, container, false);
+        final View view = inflater.inflate(R.layout.fragment_chat, container, false);
+        view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+
+            boolean isOpened = false;
+            @Override
+            public void onGlobalLayout() {
+                int heightDiff = view.getRootView().getHeight() - view.getHeight();
+                if (heightDiff > 100) { // 99% of the time the height diff will be due to a keyboard.
+                    if (!isOpened) {
+                        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+                    }
+                    isOpened = true;
+                } else if (isOpened) {
+                    isOpened = false;
+                }
+            }
+        });
         return view;
     }
 
@@ -94,14 +102,9 @@ public class ChatFragment extends Fragment {
 
                 ChatMessage chatMessage = new ChatMessage(
                         firebaseUser.getUid(),
-                        userMessage.getText().toString(),
+                        userMessage.getText().toString().trim(),
                         new Timestamp(System.currentTimeMillis() / 1000L, 0)
                 );
-
-//                Map<String, Object> newChatMessage = new HashMap<>();
-//                newChatMessage.put("sender", firebaseUser.getUid());
-//                newChatMessage.put("message", userMessage.getText().toString());
-//                newChatMessage.put("timestamp", FieldValue.serverTimestamp());
 
                 // TODO: Send message
                 firestore.collection("chatRooms")
@@ -109,7 +112,7 @@ public class ChatFragment extends Fragment {
                         .collection("messages")
                         .add(chatMessage);
 
-                Log.e(TAG, "Message sent!");
+                Log.d(TAG, "Message sent!");
 
                 // Clear EditText
                 userMessage.setText("");
@@ -122,12 +125,6 @@ public class ChatFragment extends Fragment {
         super.onStart();
 
         getChatMessages();
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        linearLayoutManager.setReverseLayout(false);
-        linearLayoutManager.setStackFromEnd(true);
-        chatRecords.setLayoutManager(linearLayoutManager);
-        chatRecords.setAdapter(chatRecordsAdapter);
     }
 
     private void getChatMessages() {
@@ -136,12 +133,12 @@ public class ChatFragment extends Fragment {
                 .collection("messages")
                 .orderBy("timestamp");
 
-//        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
-//            @Override
-//            public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
-//                chatRecordsAdapter.onDataChanged();
-//            }
-//        });
+        query.addSnapshotListener(new EventListener<QuerySnapshot>() {
+            @Override
+            public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
+                chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+            }
+        });
 
         options = new FirestoreRecyclerOptions.Builder<ChatMessage>()
                 .setQuery(query, ChatMessage.class)
@@ -197,5 +194,13 @@ public class ChatFragment extends Fragment {
                 }
             }
         };
+
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        linearLayoutManager.setReverseLayout(false);
+        linearLayoutManager.setStackFromEnd(true);
+        chatRecords.setLayoutManager(linearLayoutManager);
+        chatRecords.setAdapter(chatRecordsAdapter);
+        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
     }
 }

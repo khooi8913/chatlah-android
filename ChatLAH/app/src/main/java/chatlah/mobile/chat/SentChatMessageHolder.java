@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.TextView;
 
+import java.text.SimpleDateFormat;
+
 import chatlah.mobile.R;
 import chatlah.mobile.chat.model.ChatMessage;
 
@@ -20,6 +22,8 @@ public class SentChatMessageHolder extends ChatMessageHolder{
 
     public void bind(ChatMessage chatMessage) {
         chatMessageBody.setText(chatMessage.getMessage());
-        chatMessageTime.setText(chatMessage.getTimestamp().toDate().toString());
+        chatMessageTime.setText(
+                new SimpleDateFormat("HH:mm ").format(chatMessage.getTimestamp().toDate()
+                ));
     }
 }
