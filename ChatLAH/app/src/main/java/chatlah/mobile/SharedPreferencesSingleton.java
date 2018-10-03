@@ -13,7 +13,7 @@ public class SharedPreferencesSingleton {
     private static SharedPreferences.Editor editor;
 
     private static String PACKAGE_NAME;
-    private static final String IS_LOGGED_IN = "IS_LOGGED_IN";
+    public static final String CHAT_SESSION_START = "CHAT_SESSION_START";
 
     private SharedPreferencesSingleton(Context context) {
         mContext = context.getApplicationContext();

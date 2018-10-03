@@ -21,17 +21,14 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import chatlah.mobile.R;
+import chatlah.mobile.SharedPreferencesSingleton;
 import chatlah.mobile.chat.model.ChatMessage;
 
 public class ChatFragment extends Fragment {
@@ -61,6 +58,9 @@ public class ChatFragment extends Fragment {
                 .setTimestampsInSnapshotsEnabled(true)
                 .build();
         firestore.setFirestoreSettings(settings);
+
+        SharedPreferencesSingleton.getInstance(mContext);
+        SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START, System.currentTimeMillis()/1000L + "");
     }
 
     @Nullable
@@ -134,7 +134,7 @@ public class ChatFragment extends Fragment {
                 .document("MV")
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .startAt(new Timestamp(System.currentTimeMillis()/1000L, 0));
+                .startAt(new Timestamp(Long.parseLong(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START)), 0));
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -211,5 +211,11 @@ public class ChatFragment extends Fragment {
     public void onResume() {
         super.onResume();
         chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount()-1);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        SharedPreferencesSingleton.clearSharedPrefs();
     }
 }
