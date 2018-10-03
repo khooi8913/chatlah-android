@@ -91,6 +91,7 @@ public class TabActivity extends AppCompatActivity {
     protected void onStart() {
         super.onStart();
         // Request location permissions
+        // TODO: onRequestPermissionResult
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_RC_CODE);
         }

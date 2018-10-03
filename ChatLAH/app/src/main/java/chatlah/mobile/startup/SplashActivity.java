@@ -38,8 +38,7 @@ public class SplashActivity extends AppCompatActivity {
                 } finally {
                     if (!isFinishing()) {
                         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
-                        if (firebaseUser != null) {  // User is logged in, proceed to verify identity
-                            // TODO: Verify user
+                        if (firebaseUser != null) {  // User is logged in
                             Log.d(TAG, firebaseUser.getUid());
 
                             Intent intent = new Intent(SplashActivity.this, TabActivity.class);

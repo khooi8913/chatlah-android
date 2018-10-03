@@ -10,12 +10,11 @@
         android:layout_width="match_parent"
         android:layout_height="0dp">
 
-        <TextView
-            android:text="Hi"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/recycler_view_chat_messages"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <!--Recycler View Here-->
+            android:layout_height="match_parent">
+        </android.support.v7.widget.RecyclerView>
 
     </android.support.design.widget.CoordinatorLayout>
 
@@ -27,8 +26,8 @@
         android:padding="5dp">
 
         <EditText
-            android:id="@+id/chat_text"
-            android:hint="Enter text"
+            android:id="@+id/edit_text_user_message"
+            android:hint="Your message here"
             android:maxLines="6"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -42,7 +41,7 @@
 
             <ImageView
                 android:layout_gravity="center_horizontal|center_vertical"
-                android:id="@+id/chat_send"
+                android:id="@+id/button_send_message"
                 android:src="@drawable/ic_chat_send"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
