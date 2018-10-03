@@ -17,16 +17,17 @@
         app:civ_border_width="1dp"
         app:civ_border_color="#EEEEEE"/>
 
-    <!--<TextView-->
-        <!--android:id="@+id/chat_message_sender_name"-->
-        <!--android:text="John Doe"-->
-        <!--android:layout_width="wrap_content"-->
-        <!--android:layout_height="wrap_content"-->
-        <!--android:textSize="12sp"-->
-        <!--app:layout_constraintLeft_toRightOf="@+id/chat_message_sender_image"-->
-        <!--android:layout_marginLeft="8dp"-->
-        <!--app:layout_constraintTop_toTopOf="parent"-->
-        <!--/>-->
+    <TextView
+        android:id="@+id/chat_message_sender_name"
+        android:text="John Doe"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="12sp"
+        android:visibility="gone"
+        app:layout_constraintLeft_toRightOf="@+id/chat_message_sender_image"
+        android:layout_marginLeft="8dp"
+        app:layout_constraintTop_toTopOf="parent"
+        />
 
     <TextView
         android:id="@+id/chat_message_body"

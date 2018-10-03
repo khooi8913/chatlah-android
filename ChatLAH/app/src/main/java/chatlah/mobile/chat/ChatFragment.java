@@ -21,11 +21,15 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
+
+import java.util.HashMap;
+import java.util.Map;
 
 import chatlah.mobile.R;
 import chatlah.mobile.chat.model.ChatMessage;
@@ -65,6 +69,7 @@ public class ChatFragment extends Fragment {
         final View view = inflater.inflate(R.layout.fragment_chat, container, false);
         view.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
 
+            // Scroll chat to last message when keyboard is activated
             boolean isOpened = false;
             @Override
             public void onGlobalLayout() {
@@ -85,8 +90,6 @@ public class ChatFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
-        chatRecords = getActivity().findViewById(R.id.recycler_view_chat_messages);
 
         chatRecords = getActivity().findViewById(R.id.recycler_view_chat_messages);
         userMessage = getActivity().findViewById(R.id.edit_text_user_message);
@@ -123,7 +126,6 @@ public class ChatFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-
         getChatMessages();
     }
 
@@ -131,7 +133,8 @@ public class ChatFragment extends Fragment {
         Query query = firestore.collection("chatRooms")
                 .document("MV")
                 .collection("messages")
-                .orderBy("timestamp");
+                .orderBy("timestamp", Query.Direction.ASCENDING)
+                .startAt(new Timestamp(System.currentTimeMillis()/1000L, 0));
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
@@ -195,12 +198,18 @@ public class ChatFragment extends Fragment {
             }
         };
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        linearLayoutManager.setReverseLayout(false);
-        linearLayoutManager.setStackFromEnd(true);
-        chatRecords.setLayoutManager(linearLayoutManager);
+        LinearLayoutManager chatRecordsLayout = new LinearLayoutManager(getActivity());
+        chatRecordsLayout.setOrientation(LinearLayoutManager.VERTICAL);
+        chatRecordsLayout.setReverseLayout(false);
+        chatRecordsLayout.setStackFromEnd(true);
+        chatRecords.setLayoutManager(chatRecordsLayout);
         chatRecords.setAdapter(chatRecordsAdapter);
-        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount()-1);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount()-1);
     }
 }

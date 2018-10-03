@@ -29,10 +29,11 @@ public class ReceivedChatMessageHolder extends ChatMessageHolder {
     public void bind(ChatMessage chatMessage) {
 
         senderImage.setImageBitmap(Identicon.create(chatMessage.getSender()));
-        // No longer required
-        // senderName.setText(chatMessage.getSender());
-        chatMessageBody.setText(chatMessage.getMessage());
 
+        // No longer required
+        senderName.setText(chatMessage.getSender());
+
+        chatMessageBody.setText(chatMessage.getMessage());
         chatMessageTime.setText(
                 new SimpleDateFormat("HH:mm ").format(chatMessage.getTimestamp().toDate()
         ));
