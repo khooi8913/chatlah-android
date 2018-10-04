@@ -163,11 +163,14 @@ public class ChatFragment extends Fragment {
     }
 
     private void getChatMessages() {
+
+        // Load up to 15 minutes before
         Query query = firestore.collection("chatRooms")
                 .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
                 .collection("messages")
                 .orderBy("timestamp", Query.Direction.ASCENDING)
-                .startAt(new Timestamp(Long.parseLong(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START)), 0));
+                .startAt(new Timestamp(
+                        Long.parseLong(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START))- 900, 0));
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override

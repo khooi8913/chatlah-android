@@ -35,7 +35,7 @@ public class ReceivedChatMessageHolder extends ChatMessageHolder {
 
         chatMessageBody.setText(chatMessage.getMessage());
         chatMessageTime.setText(
-                new SimpleDateFormat("HH:mm ").format(chatMessage.getTimestamp().toDate()
+                new SimpleDateFormat("HH:mm").format(chatMessage.getTimestamp().toDate()
         ));
     }
 }

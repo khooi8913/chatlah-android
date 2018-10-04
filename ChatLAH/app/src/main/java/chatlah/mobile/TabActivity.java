@@ -147,8 +147,10 @@ public class TabActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             switch (position) {
                 case 0:
+                    Log.d(TAG, "ChatFragment Selected");
                     return new ChatFragment();
                 case 1:
+                    Log.d(TAG, "InfoFragment Selected");
                     return new InfoFragment();
                 default:
                     return null;
