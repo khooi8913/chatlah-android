@@ -336,7 +336,7 @@ public class ChatFragment extends Fragment {
                             // Broadcast to notify change
                             Intent intent = new Intent();
                             intent.setAction("chatlah.mobile.LOCATION_CHANGED");
-                            if (intent != null) getActivity().sendBroadcast(intent);
+                            if (getActivity() != null) getActivity().sendBroadcast(intent);
                         }
                     } else {
                         // Not in fence
