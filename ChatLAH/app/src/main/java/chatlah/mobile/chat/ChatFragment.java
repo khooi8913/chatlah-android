@@ -260,6 +260,8 @@ public class ChatFragment extends Fragment {
                 null /* Looper */);
 
         Toast.makeText(mContext, "Requesting location information..." ,Toast.LENGTH_SHORT).show();
+
+
     }
 
     private void stopLocationUpdates() {
