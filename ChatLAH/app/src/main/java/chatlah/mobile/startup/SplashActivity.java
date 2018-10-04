@@ -10,6 +10,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import chatlah.mobile.R;
+import chatlah.mobile.SharedPreferencesSingleton;
 import chatlah.mobile.TabActivity;
 
 public class SplashActivity extends AppCompatActivity {
@@ -26,6 +27,11 @@ public class SplashActivity extends AppCompatActivity {
         setContentView(R.layout.activity_splash);
 
         mContext = this.getApplicationContext();
+
+        // Make sure that every new launch refreshes the app
+        SharedPreferencesSingleton.getInstance(mContext);
+        SharedPreferencesSingleton.clearSharedPrefs();
+
         mThread = new Thread(new Runnable() {
             @Override
             public void run() {

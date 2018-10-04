@@ -15,6 +15,7 @@ public class SharedPreferencesSingleton {
     private static String PACKAGE_NAME;
     public static final String CHAT_SESSION_START = "CHAT_SESSION_START";
     public static final String CONVERSATION_ZONE = "CONVERSATION_ZONE";
+    public static final String SHUT_DOWN_PROPERLY = "SHUT_DOWN_PROPERLY";
 
     private SharedPreferencesSingleton(Context context) {
         mContext = context.getApplicationContext();
