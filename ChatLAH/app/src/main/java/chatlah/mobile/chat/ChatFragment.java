@@ -17,7 +17,6 @@ import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.Request;
@@ -70,6 +69,8 @@ public class ChatFragment extends Fragment {
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
+
+    private boolean requestingLocation = false;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -263,14 +264,19 @@ public class ChatFragment extends Fragment {
     }
 
     private void startLocationUpdates() throws SecurityException {
-        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                mLocationCallback,
-                null /* Looper */);
+        if(!requestingLocation){
+            requestingLocation = true;
 
-        Toast.makeText(mContext, "Requesting location information...", Toast.LENGTH_SHORT).show();
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                    mLocationCallback,
+                    null /* Looper */);
+
+            Toast.makeText(mContext, "Requesting location information...", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void stopLocationUpdates() {
+        requestingLocation = false;
         mFusedLocationClient.removeLocationUpdates(mLocationCallback);
     }
 
@@ -278,6 +284,9 @@ public class ChatFragment extends Fragment {
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
+
+                requestingLocation = false;
+
                 if (locationResult == null) {
                     Toast.makeText(mContext, "Location information not available...", Toast.LENGTH_SHORT).show();
                     return;
