@@ -172,7 +172,7 @@ public class TabActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        unregisterReceiver(broadcastReceiver);
+        if(broadcastReceiver!=null) unregisterReceiver(broadcastReceiver);
     }
 
     private void logOut() {

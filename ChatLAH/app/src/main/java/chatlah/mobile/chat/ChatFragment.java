@@ -16,6 +16,7 @@ import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -55,7 +56,9 @@ public class ChatFragment extends Fragment {
 
     private EditText userMessage;
     private ImageView sendMessage;
-    private TextView emptyView;
+    private LinearLayout startChatting;
+    private LinearLayout chatlahNotAvailable;
+    private LinearLayout locationDisabled;
 
     private FirebaseUser firebaseUser;
     private FirebaseFirestore firestore;
@@ -102,7 +105,8 @@ public class ChatFragment extends Fragment {
                 int heightDiff = view.getRootView().getHeight() - view.getHeight();
                 if (heightDiff > 100) { // 99% of the time the height diff will be due to a keyboard.
                     if (!isOpened) {
-                        if(chatRecordsAdapter!=null) chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+                        if (chatRecordsAdapter != null)
+                            chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
                     }
                     isOpened = true;
                 } else if (isOpened) {
@@ -117,8 +121,11 @@ public class ChatFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        emptyView = getActivity().findViewById(R.id.recycler_empty_view);
         chatRecords = getActivity().findViewById(R.id.recycler_chat_messages);
+
+        startChatting = getActivity().findViewById(R.id.view_start_chatting);
+        chatlahNotAvailable = getActivity().findViewById(R.id.view_chatlah_not_available);
+        locationDisabled = getActivity().findViewById(R.id.view_location_disabled);
 
         userMessage = getActivity().findViewById(R.id.edit_text_user_message);
         sendMessage = getActivity().findViewById(R.id.button_send_message);
@@ -164,7 +171,8 @@ public class ChatFragment extends Fragment {
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@javax.annotation.Nullable QuerySnapshot queryDocumentSnapshots, @javax.annotation.Nullable FirebaseFirestoreException e) {
-                if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
+                if (chatRecordsAdapter != null)
+                    chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount());
             }
         });
 
@@ -225,8 +233,8 @@ public class ChatFragment extends Fragment {
             @Override
             public void onDataChanged() {
                 super.onDataChanged();
-                if(this.getItemCount()>0){
-                    emptyView.setVisibility(View.GONE);
+                if (this.getItemCount() > 0) {
+                    startChatting.setVisibility(View.GONE);
                     chatRecords.setVisibility(View.VISIBLE);
                 }
             }
@@ -238,12 +246,12 @@ public class ChatFragment extends Fragment {
         chatRecordsLayout.setStackFromEnd(true);
         chatRecords.setLayoutManager(chatRecordsLayout);
         chatRecords.setAdapter(chatRecordsAdapter);
-        if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
+        if (chatRecordsAdapter != null)
+            chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
 
-        if(chatRecordsAdapter.getItemCount() == 0){
-            emptyView.setVisibility(View.VISIBLE);
-            emptyView.setText("ChatLAH!");
-            chatRecords.setVisibility(View.GONE);
+        if (chatRecordsAdapter.getItemCount() == 0) {
+            startChatting.setVisibility(View.VISIBLE);
+            chatRecords.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -254,14 +262,12 @@ public class ChatFragment extends Fragment {
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
-    private void startLocationUpdates() throws  SecurityException{
+    private void startLocationUpdates() throws SecurityException {
         mFusedLocationClient.requestLocationUpdates(mLocationRequest,
                 mLocationCallback,
                 null /* Looper */);
 
-        Toast.makeText(mContext, "Requesting location information..." ,Toast.LENGTH_SHORT).show();
-
-
+        Toast.makeText(mContext, "Requesting location information...", Toast.LENGTH_SHORT).show();
     }
 
     private void stopLocationUpdates() {
@@ -272,7 +278,7 @@ public class ChatFragment extends Fragment {
         mLocationCallback = new LocationCallback() {
             @Override
             public void onLocationResult(LocationResult locationResult) {
-                if(locationResult == null) {
+                if (locationResult == null) {
                     Toast.makeText(mContext, "Location information not available...", Toast.LENGTH_SHORT).show();
                     return;
                 }
@@ -297,12 +303,14 @@ public class ChatFragment extends Fragment {
                     Log.d(TAG, response.toString());
 
                     if (response.getBoolean("in_fence")) {
+                        chatlahNotAvailable.setVisibility(View.GONE);
+
                         String fence_id = response.getString("fence_id");
                         // Compare with the current one
                         String current_fence_id = SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE);
-                        if(current_fence_id==null)  current_fence_id = "";
+                        if (current_fence_id == null) current_fence_id = "";
 
-                        if(current_fence_id.equals(fence_id)) {
+                        if (current_fence_id.equals(fence_id)) {
                             // Do nothing since location not changed
                         } else {
                             // Have to clear the chat messages
@@ -319,7 +327,7 @@ public class ChatFragment extends Fragment {
                             // Broadcast to notify change
                             Intent intent = new Intent();
                             intent.setAction("chatlah.mobile.LOCATION_CHANGED");
-                            getActivity().sendBroadcast(intent);
+                            if (intent != null) getActivity().sendBroadcast(intent);
                         }
                     } else {
                         // Not in fence
@@ -328,9 +336,8 @@ public class ChatFragment extends Fragment {
                         SharedPreferencesSingleton.clearSharedPrefs();
 
                         // Tell user that ChatLAH is not available.
-                        emptyView.setText("Ooopsss... ChatLAH! is not available in your region.");
-                        emptyView.setVisibility(View.VISIBLE);
-                        chatRecords.setVisibility(View.GONE);
+                        chatlahNotAvailable.setVisibility(View.VISIBLE);
+                        chatRecords.setVisibility(View.INVISIBLE);
 
                         // Broadcast to notify change
                         Intent intent = new Intent();
@@ -361,7 +368,8 @@ public class ChatFragment extends Fragment {
     public void onResume() {
         super.onResume();
         startLocationUpdates();
-        if(chatRecordsAdapter!=null)   chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
+        if (chatRecordsAdapter != null)
+            chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
     }
 
     @Override

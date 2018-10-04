@@ -18,15 +18,71 @@
             android:layout_height="match_parent">
         </android.support.v7.widget.RecyclerView>
 
-        <!--Add empty view-->
-        <TextView
-            android:id="@+id/recycler_empty_view"
-            android:text="ChatLAH!"
-            android:textSize="30sp"
+        <!--Location Disabled View-->
+        <LinearLayout
+            android:id="@+id/view_location_disabled"
+            android:visibility="invisible"
+            android:orientation="vertical"
             android:gravity="center"
-            android:visibility="visible"
             android:layout_width="match_parent"
-            android:layout_height="match_parent" />
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:src="@drawable/ic_view_location_disabled"
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+            <TextView
+                android:layout_marginTop="10dp"
+                android:text="ChatLAH! requires Location Services to be enabled."
+                android:textColor="#DDDDDD"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!--ChatLAH! Not Available View-->
+        <LinearLayout
+            android:id="@+id/view_chatlah_not_available"
+            android:visibility="invisible"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:src="@drawable/ic_view_chatlah_not_available"
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+            <TextView
+                android:layout_marginTop="10dp"
+                android:text="Ooppss... ChatLAH! is not yet available at your location!"
+                android:textColor="#DDDDDD"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!--Start Chatting!-->
+        <LinearLayout
+            android:id="@+id/view_start_chatting"
+            android:visibility="invisible"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <ImageView
+                android:src="@drawable/ic_view_start_chatting"
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+            <TextView
+                android:layout_marginTop="10dp"
+                android:text="Let's ChatLAH!"
+                android:textColor="#DDDDDD"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
 
     </android.support.design.widget.CoordinatorLayout>
 
