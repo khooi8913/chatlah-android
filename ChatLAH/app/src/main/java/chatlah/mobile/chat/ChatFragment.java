@@ -1,8 +1,9 @@
 package chatlah.mobile.chat;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,20 +18,12 @@ import android.view.ViewTreeObserver;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
-import com.android.volley.Request;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.Volley;
 import com.firebase.ui.firestore.FirestoreRecyclerAdapter;
 import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationResult;
-import com.google.android.gms.location.LocationServices;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -40,9 +33,6 @@ import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.FirebaseFirestoreSettings;
 import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
-
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import chatlah.mobile.R;
 import chatlah.mobile.SharedPreferencesSingleton;
@@ -70,6 +60,9 @@ public class ChatFragment extends Fragment {
     private LocationRequest mLocationRequest;
     private LocationCallback mLocationCallback;
 
+    private BroadcastReceiver broadcastReceiver;
+    private IntentFilter intentFilter;
+
     private boolean requestingLocation = false;
 
     private final int SHOW_CHAT_MESSAGES = 0;
@@ -92,9 +85,40 @@ public class ChatFragment extends Fragment {
 
         SharedPreferencesSingleton.getInstance(mContext);
 
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
-        setUpLocationCallback();
-        createLocationRequest();
+        broadcastReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                Bundle bundle = intent.getExtras();
+                int geofenceEvent = bundle.getInt("GeofenceEvent");
+                if(geofenceEvent == 0) {    // ZONE NO CHANGE
+
+                    if(chatRecordsAdapter.getItemCount()>0){
+                        setViewToDisplay(SHOW_CHAT_MESSAGES);
+                    }
+
+                }else if(geofenceEvent == 1) {  // NEW ZONE
+
+                    chatRecords.setAdapter(null);
+                    sendMessage.setClickable(false);
+                    getChatMessages();
+                    sendMessage.setClickable(true);
+
+                } else if (geofenceEvent == 2) {    // OUT OF ZONE
+
+                    sendMessage.setClickable(false);
+                    chatRecords.setAdapter(null);
+
+                    // Tell user that ChatLAH is not available.
+                    setViewToDisplay(CHAT_LAH_UNAVAILABLE);
+                }  else if(geofenceEvent == 3) { // OUT OF ZONE
+                    Log.d(TAG, "received broadcast");
+                    chatRecords.setAdapter(null);
+                    setViewToDisplay(LOCATION_SERVICES_DISABLED);
+                }
+            }
+        };
+        intentFilter = new IntentFilter();
+        intentFilter.addAction("chatlah.mobile.LOCATION_CHANGED");
     }
 
     @Nullable
@@ -264,119 +288,6 @@ public class ChatFragment extends Fragment {
         }
     }
 
-    protected void createLocationRequest() {
-        mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(180000);
-        mLocationRequest.setFastestInterval(180000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-    }
-
-    private void startLocationUpdates() throws SecurityException {
-        if(!requestingLocation){
-            requestingLocation = true;
-
-            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
-                    mLocationCallback,
-                    null /* Looper */);
-        }
-    }
-
-    private void stopLocationUpdates() {
-        requestingLocation = false;
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-    }
-
-    private void setUpLocationCallback() {
-        mLocationCallback = new LocationCallback() {
-            @Override
-            public void onLocationResult(LocationResult locationResult) {
-
-                requestingLocation = false;
-
-                if (locationResult == null) {
-                    Toast.makeText(mContext, "Location information not available...", Toast.LENGTH_SHORT).show();
-                    return;
-                }
-
-                Location lastKnwonLocation = locationResult.getLastLocation();
-                double latitude = lastKnwonLocation.getLatitude();
-                double longitude = lastKnwonLocation.getLongitude();
-
-                Log.d(TAG, latitude + "," + longitude);
-                requestGeofenceInfo(latitude, longitude);
-            }
-
-        };
-    }
-
-    private void requestGeofenceInfo(double latitude, double longitude) {
-        String geoFenceApiUrl = getString(R.string.geofence_api_url) + latitude + "," + longitude;
-        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, geoFenceApiUrl, null, new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                try {
-                    Log.d(TAG, response.toString());
-
-                    if (response.getBoolean("in_fence")) {
-
-
-                        String fence_id = response.getString("fence_id");
-
-                        // Compare with the current one
-                        String current_fence_id = SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE);
-
-                        // Trying not to let it be null
-                        if (current_fence_id == null) current_fence_id = "";
-
-                        if (current_fence_id.equals(fence_id)) {
-                            // Do nothing since location not changed
-                            if(chatRecordsAdapter.getItemCount()>0) setViewToDisplay(SHOW_CHAT_MESSAGES);
-                        } else {
-                            // Have to clear the chat messages
-                            chatRecords.setAdapter(null);
-                            sendMessage.setClickable(false);
-                            SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE, fence_id);
-                            SharedPreferencesSingleton.setSharedPrefStringVal(SharedPreferencesSingleton.CHAT_SESSION_START, System.currentTimeMillis() / 1000L + "");
-
-                            // Get Messages Here
-                            getChatMessages();
-                            sendMessage.setClickable(true);
-
-                            // Broadcast to notify change
-                            Intent intent = new Intent();
-                            intent.setAction("chatlah.mobile.LOCATION_CHANGED");
-                            if (getActivity() != null){
-                                getActivity().sendBroadcast(intent);
-                            }
-                        }
-                    } else {
-                        // Not in fence
-                        sendMessage.setClickable(false);
-                        chatRecords.setAdapter(null);
-                        SharedPreferencesSingleton.clearSharedPrefs();
-
-                        // Tell user that ChatLAH is not available.
-                        setViewToDisplay(CHAT_LAH_UNAVAILABLE);
-
-                        // Broadcast to notify change
-                        Intent intent = new Intent();
-                        intent.setAction("chatlah.mobile.LOCATION_CHANGED");
-                        getActivity().sendBroadcast(intent);
-                    }
-                } catch (JSONException e) {
-                    Log.d(TAG, e.toString());
-                }
-            }
-        }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                // What should we do here a?
-                Log.e(TAG, error.toString());
-            }
-        });
-        Volley.newRequestQueue(mContext).add(jsonObjectRequest);
-    }
-
     private void setViewToDisplay(int viewNumber) {
         switch (viewNumber) {
             default:
@@ -410,21 +321,22 @@ public class ChatFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        stopLocationUpdates();
+        if(broadcastReceiver!= null) {
+            getActivity().unregisterReceiver(broadcastReceiver);
+        }
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        startLocationUpdates();
         if (chatRecordsAdapter != null){
             chatRecords.scrollToPosition(chatRecordsAdapter.getItemCount() - 1);
         }
+        getActivity().registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
     }
-
 }

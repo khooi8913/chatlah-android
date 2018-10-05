@@ -21,7 +21,7 @@
         <!--Location Disabled View-->
         <LinearLayout
             android:id="@+id/view_location_disabled"
-            android:visibility="invisible"
+            android:visibility="visible"
             android:orientation="vertical"
             android:gravity="center"
             android:layout_width="match_parent"
@@ -43,7 +43,7 @@
         <!--ChatLAH! Not Available View-->
         <LinearLayout
             android:id="@+id/view_chatlah_not_available"
-            android:visibility="visible"
+            android:visibility="invisible"
             android:orientation="vertical"
             android:gravity="center"
             android:layout_width="match_parent"

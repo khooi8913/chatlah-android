@@ -65,7 +65,26 @@ public class InfoFragment extends Fragment {
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                getInfoPosts();
+                Bundle bundle = intent.getExtras();
+                int geofenceEvent = bundle.getInt("GeofenceEvent");
+
+                if(geofenceEvent == 0) {    // SAME ZONE
+
+                    if(infoPostsAdapter.getItemCount()>0){
+                        setViewToDisplay(SHOW_INFO);
+                    }
+
+                } else if(geofenceEvent == 1) { // NEW ZONE
+                    infoPosts.setAdapter(null);
+                    getInfoPosts();
+
+                } else if(geofenceEvent == 2) { // OUT OF ZONE
+                    infoPosts.setAdapter(null);
+                    setViewToDisplay(NO_INFO_AVAILABLE);
+                } else if(geofenceEvent == 3) { // OUT OF ZONE
+                    infoPosts.setAdapter(null);
+                    setViewToDisplay(NO_INFO_AVAILABLE);
+                }
             }
         };
         intentFilter = new IntentFilter();
@@ -87,12 +106,12 @@ public class InfoFragment extends Fragment {
     }
 
     private void getInfoPosts() {
-        if(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE) == null){
-            setViewToDisplay(NO_INFO_AVAILABLE);
-            infoPostsAdapter = null;
-            infoPosts.setAdapter(null);
-            return;
-        }
+//        if(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE) == null){
+//            setViewToDisplay(NO_INFO_AVAILABLE);
+//            infoPostsAdapter = null;
+//            infoPosts.setAdapter(null);
+//            return;
+//        }
 
         Query query = firestore.collection("chatRooms")
                 .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
@@ -138,6 +157,8 @@ public class InfoFragment extends Fragment {
                 super.onDataChanged();
                 if(getItemCount() > 0){
                     setViewToDisplay(SHOW_INFO);
+                }else {
+                    setViewToDisplay(NO_INFO_AVAILABLE);
                 }
             }
         };
