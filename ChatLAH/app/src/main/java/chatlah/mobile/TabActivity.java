@@ -5,8 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -20,6 +22,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
@@ -38,7 +41,7 @@ import chatlah.mobile.startup.SplashActivity;
 public class TabActivity extends AppCompatActivity {
 
     private String TAG = getClass().getSimpleName();
-    private final int LOCATION_RC_CODE = 9002;
+    private Context mContext;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
@@ -56,6 +59,8 @@ public class TabActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_tab);
+        mContext = getApplicationContext();
+        SharedPreferencesSingleton.getInstance(mContext);
 
         this.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
@@ -109,10 +114,6 @@ public class TabActivity extends AppCompatActivity {
         super.onStart();
         // Request location permissions
         // TODO: onRequestPermissionResult
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_RC_CODE);
-        }
-        registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override
@@ -170,14 +171,27 @@ public class TabActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onPause() {
+        super.onPause();
+        if(broadcastReceiver!=null){
+            unregisterReceiver(broadcastReceiver);
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
+        SharedPreferencesSingleton.clearSharedPrefs();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if(broadcastReceiver!=null) unregisterReceiver(broadcastReceiver);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
     private void logOut() {

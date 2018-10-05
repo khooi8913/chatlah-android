@@ -39,8 +39,6 @@ public class InfoFragment extends Fragment {
     private String TAG = getClass().getSimpleName();
 
     private LinearLayout emptyView;
-
-    private FirebaseUser firebaseUser;
     private FirebaseFirestore firestore;
 
     private RecyclerView infoPosts;
@@ -50,13 +48,14 @@ public class InfoFragment extends Fragment {
     private BroadcastReceiver broadcastReceiver;
     private IntentFilter intentFilter;
 
+    private final int SHOW_INFO = 0;
+    private final int NO_INFO_AVAILABLE = 1;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         mContext = getActivity().getApplicationContext();
-
-        firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         firestore = FirebaseFirestore.getInstance();
         FirebaseFirestoreSettings settings = new FirebaseFirestoreSettings.Builder()
                 .setTimestampsInSnapshotsEnabled(true)
@@ -66,7 +65,6 @@ public class InfoFragment extends Fragment {
         broadcastReceiver = new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                Log.d(TAG, "Get Info!");
                 getInfoPosts();
             }
         };
@@ -84,21 +82,22 @@ public class InfoFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-
         infoPosts = getActivity().findViewById(R.id.recycler_info);
         emptyView = getActivity().findViewById(R.id.empty_view);
     }
 
     private void getInfoPosts() {
+        if(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE) == null){
+            setViewToDisplay(NO_INFO_AVAILABLE);
+            infoPostsAdapter = null;
+            infoPosts.setAdapter(null);
+            return;
+        }
+
         Query query = firestore.collection("chatRooms")
                 .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
                 .collection("info")
                 .orderBy("expires_on", Query.Direction.DESCENDING);
-
-//        Query query = firestore.collection("chatRooms")
-//                .document("FSKTM")
-//                .collection("info")
-//                .orderBy("expires_on", Query.Direction.DESCENDING);
 
         options = new FirestoreRecyclerOptions.Builder<Info>()
                 .setQuery(query, Info.class)
@@ -137,7 +136,9 @@ public class InfoFragment extends Fragment {
             @Override
             public void onDataChanged() {
                 super.onDataChanged();
-                emptyView.setVisibility(View.GONE);
+                if(getItemCount() > 0){
+                    setViewToDisplay(SHOW_INFO);
+                }
             }
         };
 
@@ -150,6 +151,20 @@ public class InfoFragment extends Fragment {
         infoPosts.setAdapter(infoPostsAdapter);
     }
 
+    private void setViewToDisplay(int viewNumber) {
+        switch (viewNumber) {
+            default:
+            case SHOW_INFO:
+                emptyView.setVisibility(View.INVISIBLE);
+                infoPosts.setVisibility(View.VISIBLE);
+                break;
+            case NO_INFO_AVAILABLE:
+                emptyView.setVisibility(View.VISIBLE);
+                infoPosts.setVisibility(View.INVISIBLE);
+                break;
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -158,13 +173,14 @@ public class InfoFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "Info Loaded");
         getActivity().registerReceiver(broadcastReceiver, intentFilter);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        getActivity().unregisterReceiver(broadcastReceiver);
+        if(broadcastReceiver!=null){
+            getActivity().unregisterReceiver(broadcastReceiver);
+        }
     }
 }

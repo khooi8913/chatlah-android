@@ -43,7 +43,7 @@
         <!--ChatLAH! Not Available View-->
         <LinearLayout
             android:id="@+id/view_chatlah_not_available"
-            android:visibility="invisible"
+            android:visibility="visible"
             android:orientation="vertical"
             android:gravity="center"
             android:layout_width="match_parent"
@@ -53,10 +53,19 @@
                 android:src="@drawable/ic_view_chatlah_not_available"
                 android:layout_width="match_parent"
                 android:layout_height="100dp" />
-
             <TextView
                 android:layout_marginTop="10dp"
-                android:text="Ooppss... ChatLAH! is not yet available at your location!"
+                android:text="Oopss... This is awkward..."
+                android:textColor="#DDDDDD"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="ChatLAH! is not yet available at your region!"
+                android:textColor="#DDDDDD"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:text="Stay tuned!"
                 android:textColor="#DDDDDD"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
@@ -83,7 +92,6 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
-
     </android.support.design.widget.CoordinatorLayout>
 
     <LinearLayout
@@ -111,6 +119,7 @@
             <ImageView
                 android:layout_gravity="center_horizontal|center_vertical"
                 android:id="@+id/button_send_message"
+                android:clickable="false"
                 android:src="@drawable/ic_chat_send"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
