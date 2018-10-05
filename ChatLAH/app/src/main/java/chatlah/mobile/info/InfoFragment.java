@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SimpleItemAnimator;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -89,15 +90,15 @@ public class InfoFragment extends Fragment {
     }
 
     private void getInfoPosts() {
-//        Query query = firestore.collection("chatRooms")
-//                .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
-//                .collection("info")
-//                .orderBy("expires_on", Query.Direction.DESCENDING);
-
         Query query = firestore.collection("chatRooms")
-                .document("FSKTM")
+                .document(SharedPreferencesSingleton.getSharedPrefStringVal(SharedPreferencesSingleton.CONVERSATION_ZONE))
                 .collection("info")
                 .orderBy("expires_on", Query.Direction.DESCENDING);
+
+//        Query query = firestore.collection("chatRooms")
+//                .document("FSKTM")
+//                .collection("info")
+//                .orderBy("expires_on", Query.Direction.DESCENDING);
 
         options = new FirestoreRecyclerOptions.Builder<Info>()
                 .setQuery(query, Info.class)
@@ -118,13 +119,33 @@ public class InfoFragment extends Fragment {
             }
 
             @Override
-            protected void onBindViewHolder(@NonNull InfoHolder holder, int position, @NonNull Info info) {
+            protected void onBindViewHolder(@NonNull InfoHolder holder, final int position, @NonNull Info info) {
+                final Info infoPost = getItem(position);
+
                 holder.bind(info, getContext());
+
+                holder.itemView.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        boolean expanded = infoPost.isExpanded();
+                        infoPost.setExpanded(!expanded);
+                        notifyItemChanged(position);
+                    }
+                });
+            }
+
+            @Override
+            public void onDataChanged() {
+                super.onDataChanged();
+                emptyView.setVisibility(View.GONE);
             }
         };
 
         LinearLayoutManager infoPostLayout = new LinearLayoutManager(getActivity());
         infoPostLayout.setOrientation(LinearLayoutManager.VERTICAL);
+
+        ((SimpleItemAnimator) infoPosts.getItemAnimator()).setSupportsChangeAnimations(true);
+
         infoPosts.setLayoutManager(infoPostLayout);
         infoPosts.setAdapter(infoPostsAdapter);
     }

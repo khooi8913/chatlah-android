@@ -21,10 +21,22 @@
         <LinearLayout
             android:orientation="vertical"
             android:id="@+id/empty_view"
-            android:visibility="invisible"
+            android:visibility="visible"
+            android:gravity="center"
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <ImageView
+                android:src="@drawable/ic_view_info_empty"
+                android:layout_width="match_parent"
+                android:layout_height="100dp" />
+
+            <TextView
+                android:layout_marginTop="10dp"
+                android:text="Seems like there's no info nearby!"
+                android:textColor="#DDDDDD"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
             <!--Something here-->
         </LinearLayout>
 

@@ -262,7 +262,7 @@ public class ChatFragment extends Fragment {
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(180000);
-        mLocationRequest.setFastestInterval(60000);
+        mLocationRequest.setFastestInterval(180000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
     }
 
@@ -274,7 +274,7 @@ public class ChatFragment extends Fragment {
                     mLocationCallback,
                     null /* Looper */);
 
-            Toast.makeText(mContext, "Requesting location information...", Toast.LENGTH_SHORT).show();
+//            Toast.makeText(mContext, "Requesting location information...", Toast.LENGTH_SHORT).show();
         }
     }
 

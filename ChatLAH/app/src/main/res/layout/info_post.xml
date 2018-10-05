@@ -2,7 +2,7 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:background="@drawable/border"
-    android:padding="5dp"
+    android:layout_margin="5dp"
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
@@ -17,20 +17,62 @@
             android:layout_width="match_parent"
             android:layout_height="150dp" />
 
-        <TextView
-            android:id="@+id/info_post_title"
-            android:text="Title"
-            android:textStyle="bold"
+        <LinearLayout
+            android:weightSum="10"
             android:layout_marginLeft="15dp"
+            android:layout_marginRight="15dp"
+            android:orientation="horizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/info_post_period"
-            android:text="3 Oct 2018 ~ 31 Dec 2018"
-            android:layout_marginLeft="15dp"
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_weight="9"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/info_post_title"
+                    android:text="Title"
+                    android:textStyle="bold"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <TextView
+                    android:id="@+id/info_post_period"
+                    android:text="3 Oct 2018 ~ 31 Dec 2018"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"/>
+
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/info_post_arrow"
+                android:src="@drawable/ic_arrow_down"
+                android:layout_weight="1"
+                android:layout_width="0dp"
+                android:layout_height="match_parent" />
+        </LinearLayout>
+
+
+
+        <LinearLayout
+            android:id="@+id/info_post_sub_item"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/info_post_description"
+                android:text="Description"
+                android:layout_marginLeft="25dp"
+                android:layout_marginRight="25dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"/>
+
+        </LinearLayout>
+
     </LinearLayout>
 
 </LinearLayout>
